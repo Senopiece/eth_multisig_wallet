@@ -1,4 +1,4 @@
-import solc
+import solcx
 import sys
 import os
 from dotenv import load_dotenv
@@ -14,13 +14,12 @@ OWNERS         = os.getenv('OWNERS').split()
 THRESHOLD      = os.getenv('THRESHOLD')
 VERIFY         = os.getenv('VERIFY')
 
-solc.install_solc(SOLIDITY)
+solcx.install_solc(SOLIDITY)
 
 def main():
     if len(sys.argv) == 2:
         if os.path.exists(sys.argv[1]):
-            res = solc.compile_files([sys.argv[1]])
-            pprint(res)
+            solcx.compile_files([sys.argv[1]])
             return
         else:
             problem = "There is no file: " + sys.argv[1]
