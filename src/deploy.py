@@ -54,7 +54,7 @@ def main():
                         else:
                             raise ex # Such conditions wasn't described
                 except:
-                    problem = "The JSON RPC URL " + RPCURL + "is not accessible"
+                    problem = "The JSON RPC URL " + RPCURL + " is not accessible"
             else:
                 problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
         else:
