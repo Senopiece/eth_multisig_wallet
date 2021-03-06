@@ -1,0 +1,4 @@
+py-solc-x
+python-dotenv
+web3
+requests
