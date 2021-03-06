@@ -5,23 +5,28 @@ import solcx
 import sys
 import os
 
+import itertools # TODO: remove
+
 load_dotenv(verbose=True, override=True)
 
+# may be None
+VERIFY = os.getenv('VERIFY') # TODO
+
+# must be defined, what to do in otherwise conditiona wasn't described
 PRIVKEY        = os.getenv('PRIVKEY')
 RPCURL         = os.getenv('RPCURL')
-GASPRICE       = os.getenv('GASPRICE')
+GASPRICE       = int(os.getenv('GASPRICE'))
 WALLETCONTRACT = os.getenv('WALLETCONTRACT').title()
 SOLIDITY       = os.getenv('SOLIDITY')
 OWNERS         = os.getenv('OWNERS').split()
-THRESHOLD      = os.getenv('THRESHOLD')
-VERIFY         = os.getenv('VERIFY')
-
-solcx.install_solc(SOLIDITY)
+THRESHOLD      = int(os.getenv('THRESHOLD'))
 
 def main():
     if len(sys.argv) == 2:
         filename = sys.argv[1]
+
         if os.path.exists(filename):
+            solcx.install_solc(SOLIDITY)
             intermediates = solcx.compile_files([filename]).get(filename+":"+WALLETCONTRACT)
 
             if intermediates is not None:
@@ -41,15 +46,14 @@ def main():
                     tx_hash = web3.eth.sendRawTransaction(signed.rawTransaction)
                     txr = web3.eth.waitForTransactionReceipt(tx_hash)
                     print("Deployed at " + txr['contractAddress'])
+                    return
                 except Exception as ex:
                     if str(ex).find('Insufficient funds') != -1:
-                        return None
+                        problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."
                     else:
-                        raise ex
-
-                return
-
-            problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
+                        raise ex # Such conditions wasn't described
+            else:
+                problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
         else:
             problem = "There is no file: " + filename
     else:
