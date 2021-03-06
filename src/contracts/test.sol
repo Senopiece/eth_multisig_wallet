@@ -246,7 +246,7 @@ contract Test {
                 break;
             }
         }
-        require(voted, "you didn't voted"); 
+        require(voted, "you didn't vote"); 
         
         delete votes[id][i];
         emit CancelRegistered(id, msg.sender);
