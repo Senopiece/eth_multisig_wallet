@@ -27,47 +27,46 @@ def main():
 
         if os.path.exists(filename):
             solcx.install_solc(SOLIDITY)
+            solcx.set_solc_version(SOLIDITY)
             intermediates = solcx.compile_files([filename]).get(filename+":"+WALLETCONTRACT)
 
             if intermediates is not None:
+                web3 = Web3(HTTPProvider(RPCURL))
+
+                abi = intermediates["abi"]
+                code = intermediates["bin"]
+
+                tx = web3.eth.contract(bytecode=code, abi=abi).constructor(OWNERS, THRESHOLD).buildTransaction({
+                    'gasPrice': GASPRICE if GASPRICE is not None else web3.eth.gasPrice,
+                    'nonce': web3.eth.getTransactionCount(to_address(PRIVKEY))
+                })
+
+                signed = web3.eth.account.signTransaction(tx, private_key=PRIVKEY)
+
                 try:
-                    web3 = Web3(HTTPProvider(RPCURL))
+                    tx_hash = web3.eth.sendRawTransaction(signed.rawTransaction)
+                    txr = web3.eth.waitForTransactionReceipt(tx_hash)
+                    contract_addr = txr['contractAddress']
 
-                    abi = intermediates["abi"]
-                    code = intermediates["bin"]
+                    if VERIFY:
+                        print(requests.post('https://blockscout.com/poa/sokol/api?module=contract&action=verify', json={
+                            "addressHash":contract_addr,
+                            "compilerVersion":str(solcx.get_solc_version(True)),
+                            "contractSourceCode":get_content_from_file(filename),
+                            "optimization":False,
+                            "name":WALLETCONTRACT
+                            }
+                        ).json())
 
-                    tx = web3.eth.contract(bytecode=code, abi=abi).constructor(OWNERS, THRESHOLD).buildTransaction({
-                        'gasPrice': GASPRICE if GASPRICE is not None else web3.eth.gasPrice,
-                        'nonce': web3.eth.getTransactionCount(to_address(PRIVKEY))
-                    })
-
-                    signed = web3.eth.account.signTransaction(tx, private_key=PRIVKEY)
-
-                    try:
-                        tx_hash = web3.eth.sendRawTransaction(signed.rawTransaction)
-                        txr = web3.eth.waitForTransactionReceipt(tx_hash)
-                        contract_addr = txr['contractAddress']
-
-                        if VERIFY:
-                            requests.post('https://blockscout.com/poa/sokol/api?module=contract&action=verify', json={
-                                "addressHash":contract_addr,
-                                "compilerVersion":SOLIDITY,
-                                "contractSourceCode":get_content_from_file(filename),
-                                "name":WALLETCONTRACT,
-                                "optimization":False
-                                }
-                            )
-
-                        print("Deployed at " + contract_addr)
-                        return
+                    print("Deployed at " + contract_addr)
+                    return
                     
-                    except Exception as ex:
-                        if str(ex).find('Insufficient funds') != -1:
-                            problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."
-                        else:
-                            raise ex # Such conditions wasn't described
-                except:
-                    problem = "The JSON RPC URL " + RPCURL + " is not accessible"
+                except Exception as ex:
+                    if str(ex).find('Insufficient funds') != -1:
+                        problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."
+                    else:
+                        raise ex
+                        problem = "The JSON RPC URL " + RPCURL + " is not accessible"
             else:
                 problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
         else:
