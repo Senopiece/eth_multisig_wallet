@@ -6,13 +6,11 @@ import sys
 import os
 import requests
 
-import itertools # TODO: remove
-
 load_dotenv(verbose=True, override=True)
 
-VERIFY = os.getenv('VERIFY', False)
+VERIFY = os.getenv('VERIFY', "False").title() == "True"
 
-# must be defined, what to do in otherwise conditiona wasn't described
+# must be defined and be correct, what to do in otherwise conditiona wasn't described
 PRIVKEY        = os.getenv('PRIVKEY')
 RPCURL         = os.getenv('RPCURL')
 GASPRICE       = int(os.getenv('GASPRICE'))
@@ -28,7 +26,7 @@ def main():
         if os.path.exists(filename):
             solcx.install_solc(SOLIDITY)
             solcx.set_solc_version(SOLIDITY)
-            intermediates = solcx.compile_files([filename]).get(filename+":"+WALLETCONTRACT)
+            intermediates = solcx.compile_files([filename], optimize=True, optimize_runs=200).get(filename+":"+WALLETCONTRACT)
 
             if intermediates is not None:
                 web3 = Web3(HTTPProvider(RPCURL))
@@ -49,12 +47,16 @@ def main():
                     contract_addr = txr['contractAddress']
 
                     if VERIFY:
-                        print(requests.post('https://blockscout.com/poa/sokol/api?module=contract&action=verify', json={
-                            "addressHash":contract_addr,
-                            "compilerVersion":str(solcx.get_solc_version(True)),
-                            "contractSourceCode":get_content_from_file(filename),
-                            "optimization":False,
-                            "name":WALLETCONTRACT
+                        print(requests.post('http://blockscout.com/poa/sokol/api?module=contract&action=verify', 
+                            json={
+                                "addressHash":contract_addr,
+                                "compilerVersion":str(solcx.get_solc_version(True)),
+                                "contractSourceCode":get_content_from_file(filename),
+                                "optimization":True,
+                                "name":WALLETCONTRACT,
+                                "autodetectConstructorArguments":True,
+                                "evmVersion":"default",
+                                "optimizationRuns":200
                             }
                         ).json())
 
@@ -66,7 +68,7 @@ def main():
                         problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."
                     else:
                         raise ex
-                        problem = "The JSON RPC URL " + RPCURL + " is not accessible"
+                        # problem = "The JSON RPC URL " + RPCURL + " is not accessible"
             else:
                 problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
         else:
