@@ -1,16 +1,16 @@
 from web3 import Web3, HTTPProvider
 from dotenv import load_dotenv
-from tools import to_address
+from tools import to_address, get_content_from_file
 import solcx
 import sys
 import os
+import requests
 
 import itertools # TODO: remove
 
 load_dotenv(verbose=True, override=True)
 
-# may be None
-VERIFY = os.getenv('VERIFY') # TODO
+VERIFY = os.getenv('VERIFY', False)
 
 # must be defined, what to do in otherwise conditiona wasn't described
 PRIVKEY        = os.getenv('PRIVKEY')
@@ -46,8 +46,21 @@ def main():
                     try:
                         tx_hash = web3.eth.sendRawTransaction(signed.rawTransaction)
                         txr = web3.eth.waitForTransactionReceipt(tx_hash)
-                        print("Deployed at " + txr['contractAddress'])
+                        contract_addr = txr['contractAddress']
+
+                        if VERIFY:
+                            requests.post('https://blockscout.com/poa/sokol/api?module=contract&action=verify', json={
+                                "addressHash":contract_addr,
+                                "compilerVersion":SOLIDITY,
+                                "contractSourceCode":get_content_from_file(filename),
+                                "name":WALLETCONTRACT,
+                                "optimization":False
+                                }
+                            )
+
+                        print("Deployed at " + contract_addr)
                         return
+                    
                     except Exception as ex:
                         if str(ex).find('Insufficient funds') != -1:
                             problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."

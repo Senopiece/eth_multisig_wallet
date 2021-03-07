@@ -22,3 +22,8 @@ def get_ABI(addr, default_local_path="contracts/test.sol"):
         intermediates = solcx.compile_files([default_local_path])
         abi = intermediates[next(filter(lambda x: 'ERC20' not in x, intermediates.keys()))]["abi"]
     return abi
+
+
+def get_content_from_file(filename):
+    with open(filename) as f:
+        return f.read()
