@@ -29,7 +29,6 @@ contract Test {
 
     event RequestToAddOwner(address indexed newowner);
     event OwnerAdded(address indexed newowner);
-    event OwnerExists(address indexed newowner);
 
     event RequestToChangeThreshold(uint256 amount, uint256 oldthresh, uint256 newthresh);
     event ThresholdChanged(uint256 amount, uint256 oldthresh, uint256 newthresh);
@@ -117,7 +116,7 @@ contract Test {
                 _owners.push(newowner);
                 emit OwnerAdded(newowner);
             }
-            else emit OwnerExists(newowner);
+            else revert("he is alredy a owner");
 
             stop_debate(my_id);
         }
@@ -266,7 +265,7 @@ contract Test {
         }
     }
 
-    function getThreshold() public only_for_owners view returns (uint256) {
+    function getThreshold() public view returns (uint256) {
         return _treshhold;
     }
 }
