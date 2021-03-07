@@ -1,4 +1,4 @@
-pragma solidity 0.7.4;
+pragma solidity >=0.7.4 <=0.7.6;
 
 interface ERC20 {
     function totalSupply() external view returns (uint256);
@@ -59,11 +59,6 @@ contract Test {
         _;
     }
 
-    function set_treshhold(uint256 value) private {
-        emit ThresholdChanged(_owners.length, _treshhold, value);
-        _treshhold = value;
-    }
-
     function start_new_debate(bytes32 id) private {
         votes[id] = [msg.sender];
         debates_count++;
@@ -87,7 +82,7 @@ contract Test {
         for (uint i = 0; i < _owners.length; i++) {
             emit OwnerAdded(_owners[i]);
         }
-        set_treshhold(threshold);
+        _setThreshold(threshold);
     }
 
     function addOwner(address newowner) public only_for_owners {
@@ -265,7 +260,20 @@ contract Test {
         }
     }
 
+    function _setThreshold(uint256 value) private {
+        emit ThresholdChanged(_owners.length, _treshhold, value);
+        _treshhold = value;
+    }
+
+    function setThreshold(uint256 value) public only_for_owners {
+        _setThreshold(value);
+    }
+
     function getThreshold() public view returns (uint256) {
         return _treshhold;
+    }
+
+    function getOwners() public view returns (address[] memory) {
+        return _owners;
     }
 }
