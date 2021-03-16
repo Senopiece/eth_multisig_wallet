@@ -103,6 +103,7 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
         if (!_pending_actions[action_id].is_confirmed_by[confirmator])
         {
             _pending_actions[action_id].is_confirmed_by[confirmator] = true;
+            _pending_actions[action_id].confirmations_count += 1;
             emit ActionConfirmed(action_id, confirmator);
         }
         else
@@ -113,6 +114,7 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
         if (_pending_actions[action_id].is_confirmed_by[confirmator])
         {
             _pending_actions[action_id].is_confirmed_by[confirmator] = false;
+            _pending_actions[action_id].confirmations_count -= 1;
             emit CancelRegistered(action_id, confirmator);
         }
         else
