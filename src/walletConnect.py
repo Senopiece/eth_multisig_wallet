@@ -15,7 +15,6 @@ GASPRICE = int(os.getenv('GASPRICE'))
 WALLETCONTRACTADDRESS = os.getenv('WALLETCONTRACTADDRESS')
 
 web3 = Web3(HTTPProvider(RPCURL))
-web3.eth.defaultAccount = to_address(PRIVKEY)
 
 abi = get_ABI(WALLETCONTRACTADDRESS)
 contract = ContractWrapper(w3=web3, gas=GASPRICE, user_pk=PRIVKEY, abi=abi, address=WALLETCONTRACTADDRESS)
@@ -82,9 +81,9 @@ def remove(addr):
 def execute(tx_cmd, req_evt, end_evt, post_check, fallback_id):
     tx = tx_cmd()
 
-    if web3.eth.defaultAccount not in contract.getOwners():
-        print("It is not the wallet owner. Nothing to do.")
-        return tx
+    # if web3.eth.defaultAccount not in contract.getOwners():
+    #     print("It is not the wallet owner. Nothing to do.")
+    #     return tx
 
     e_ok = contract.events.ActionConfirmed().processReceipt(tx)
 
