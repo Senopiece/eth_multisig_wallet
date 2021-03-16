@@ -66,10 +66,11 @@ def main():
                         }
                         response = requests.post('https://blockscout.com/poa/sokol/api?module=contract&action=verify',
                                                  json=json)
-                        if response.status_code == 200:
-                            print('Verification message:', response.json()['message'])
-                        else:
-                            print('Error:', response.status_code, response.reason)
+                        if response.status_code != 200:
+                            raise Exception(
+                                f'error while sending on verification - {response.status_code} {response.reason}.')
+                        if response.json()['message'] != 'OK':
+                            raise Exception(f'verification failed - {response.json()["message"]}')
 
                     if os.getenv('DEV'):
                         dotenv.set_key(dotenv.find_dotenv(), "WALLETCONTRACTADDRESS", contract_addr)
