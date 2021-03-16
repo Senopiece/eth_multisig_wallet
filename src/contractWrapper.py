@@ -1,16 +1,14 @@
-from time import sleep
-
+from tools import to_address
 from web3.exceptions import SolidityError, ContractLogicError
 
 
 class ContractWrapper:
     gas_price = None
     user_priv_key = None
+    user_acc = None
 
     def __init__(self, w3, gas, user_pk, **kwargs):
         """
-        с w3.eth.defaultAccount будут отправляться транзакции.
-
         Методы автоматически определяются как call или buildTransaction
         > методы определенные как call возвращают результат функции
         > методы определенные как bT возвращают рецепт отправленной транзакции
@@ -22,6 +20,7 @@ class ContractWrapper:
 
         gas_price = gas
         user_priv_key = user_pk
+        user_acc = to_address(user_pk)
 
         contract = w3.eth.contract(**kwargs)
 
@@ -32,7 +31,7 @@ class ContractWrapper:
         def construct(*args, **kwargs):
             tx = contract.constructor(*args, **kwargs).buildTransaction({
                 'gasPrice': gas_price,
-                'nonce': w3.eth.getTransactionCount(w3.eth.defaultAccount)
+                'nonce': w3.eth.getTransactionCount(user_acc)
             })
 
             signed = w3.eth.account.signTransaction(tx, private_key=user_priv_key)
@@ -60,15 +59,14 @@ class ContractWrapper:
                         def funct(name):
                             def func(*args, **kwargs):
                                 value = 0 if 'value' not in kwargs.keys() else kwargs.pop('value')
-                                data = contract.encodeABI(fn_name=name, args=args, kwargs=kwargs)
 
                                 tx = {
                                     'to': contract.address,
                                     'value': value,
                                     'gas': 1000000,
                                     'gasPrice': gas_price,
-                                    'nonce': w3.eth.getTransactionCount(w3.eth.defaultAccount),
-                                    'data': data
+                                    'nonce': w3.eth.getTransactionCount(user_acc),
+                                    'data': contract.encodeABI(fn_name=name, args=args, kwargs=kwargs)
                                 }
 
                                 try:
