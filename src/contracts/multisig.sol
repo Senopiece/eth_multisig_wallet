@@ -86,7 +86,7 @@ contract MultisigDatapack_2 is MultisigDatapack_1 {
 
 contract MultisigDatapack_3 is MultisigDatapack_2 {
     struct PA {
-        uint256 confirmations_count;
+        address[] confirmators;
         mapping(address => bool) is_confirmed_by;
     }
     mapping(bytes32 => PA) private _pending_actions;
@@ -96,14 +96,15 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
     }
 
     function confirmationsCount(bytes32 action_id) public view returns (uint256) { // <---------------------------- public
-        return _pending_actions[action_id].confirmations_count;
+        return _pending_actions[action_id].confirmators.length;
     }
 
     function _confirmPendingAction(bytes32 action_id, address confirmator) internal {
-        if (!_pending_actions[action_id].is_confirmed_by[confirmator])
+        PA storage context = _pending_actions[action_id];
+        if (!context.is_confirmed_by[confirmator])
         {
-            _pending_actions[action_id].is_confirmed_by[confirmator] = true;
-            _pending_actions[action_id].confirmations_count += 1;
+            context.is_confirmed_by[confirmator] = true;
+            context.confirmators.push(confirmator);
             emit ActionConfirmed(action_id, confirmator);
         }
         else
@@ -111,10 +112,21 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
     }
 
     function _cancelConfirmation(bytes32 action_id, address confirmator) internal {
-        if (_pending_actions[action_id].is_confirmed_by[confirmator])
+        PA storage context = _pending_actions[action_id];
+        if (context.is_confirmed_by[confirmator])
         {
-            _pending_actions[action_id].is_confirmed_by[confirmator] = false;
-            _pending_actions[action_id].confirmations_count -= 1;
+            context.is_confirmed_by[confirmator] = false;
+            
+            for (uint256 i = 0; i < context.confirmators.length; i++)
+            {
+                if (context.confirmators[i] == confirmator)
+                {
+                    context.confirmators[i] = context.confirmators[context.confirmators.length - 1];
+                    context.confirmators.pop();
+                    break;
+                }
+            }
+            
             emit CancelRegistered(action_id, confirmator);
         }
         else
@@ -122,7 +134,12 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
     }
 
     function _clearConfirmations(bytes32 action_id) internal {
-        _pending_actions[action_id] = PA();
+        PA storage context = _pending_actions[action_id];
+        for (uint256 i = 0; i < context.confirmators.length; i++)
+        {
+            context.is_confirmed_by[context.confirmators[i]] = false;
+        }
+        delete context.confirmators;
     }
 }
 
