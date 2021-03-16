@@ -14,7 +14,7 @@ VERIFY = os.getenv('VERIFY', "False").title() == "True"
 PRIVKEY = os.getenv('PRIVKEY')
 RPCURL = os.getenv('RPCURL')
 GASPRICE = int(os.getenv('GASPRICE'))
-WALLETCONTRACT = os.getenv('WALLETCONTRACT').title()
+WALLETCONTRACT = os.getenv('WALLETCONTRACT')
 SOLIDITY = os.getenv('SOLIDITY')
 OWNERS = os.getenv('OWNERS').split()
 THRESHOLD = int(os.getenv('THRESHOLD'))
@@ -49,18 +49,27 @@ def main():
                     contract_addr = txr['contractAddress']
 
                     if VERIFY:
-                        print(requests.post('http://blockscout.com/poa/sokol/api?module=contract&action=verify',
-                                            json={
-                                                "addressHash": contract_addr,
-                                                "compilerVersion": str(solcx.get_solc_version(True)),
-                                                "contractSourceCode": get_content_from_file(filename),
-                                                "optimization": True,
-                                                "name": WALLETCONTRACT,
-                                                "autodetectConstructorArguments": True,
-                                                "evmVersion": "default",
-                                                "optimizationRuns": 200
-                                            }
-                                            ).json())
+                        json = {
+                            "addressHash": contract_addr,
+                            "compilerVersion": 'v' + str(solcx.get_solc_version(True)),
+                            "contractSourceCode": get_content_from_file(filename),
+                            "optimization": True,
+                            "name": WALLETCONTRACT,
+                            "constructorArguments": '000000000000000000000000000000000000000000000000000000000000004000'
+                                                    '000000000000000000000000000000000000000000000000000000000000020000'
+                                                    '000000000000000000000000000000000000000000000000000000000003000000'
+                                                    '00000000000000000033e0e07ca86c869ade3fc9de9126f6c73dad105e00000000'
+                                                    '000000000000000079dd14623c4d33413c0c28fdabc2285fdb1e572e0000000000'
+                                                    '00000000000000130930e3e3d30bf8f975a729e948cdcc212ecfbb',
+                            "evmVersion": "default",
+                            "optimizationRuns": 200
+                        }
+                        response = requests.post('https://blockscout.com/poa/sokol/api?module=contract&action=verify',
+                                                 json=json)
+                        if response.status_code == 200:
+                            print('Verification message:', response.json()['message'])
+                        else:
+                            print('Error:', response.status_code, response.reason)
 
                     if os.getenv('DEV'):
                         dotenv.set_key(dotenv.find_dotenv(), "WALLETCONTRACTADDRESS", contract_addr)
