@@ -60,6 +60,8 @@ class ContractWrapper:
                             def func(*args, **kwargs):
                                 value = 0 if 'value' not in kwargs.keys() else kwargs.pop('value')
 
+                                getattr(contract.functions, name)(*args, **kwargs).call()
+
                                 tx = {
                                     'to': contract.address,
                                     'value': value,
