@@ -48,7 +48,7 @@ contract MultisigDatapack_1 is MultisigEvents {
         return _is_owner[addr];
     }
 
-    function addOwner(address addr) internal {
+    function _addOwner(address addr) internal {
         if (!_is_owner[addr])
         {
             _is_owner[addr] = true;
@@ -59,7 +59,7 @@ contract MultisigDatapack_1 is MultisigEvents {
             revert("he is already a owner");
     }
 
-    function removeOwner(address addr) internal {
+    function _removeOwner(address addr) internal {
         if (_is_owner[addr])
         {
             _is_owner[addr] = false;
@@ -78,7 +78,7 @@ contract MultisigDatapack_2 is MultisigDatapack_1 {
         return _threshold;
     }
 
-    function setThreshold(uint256 value) internal {
+    function _setThreshold(uint256 value) internal {
         emit ThresholdChanged(countOwners(), _threshold, value);
         _threshold = value;
     }
@@ -99,7 +99,7 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
         return _pending_actions[action_id].confirmations_count;
     }
 
-    function confirmPendingAction(bytes32 action_id, address confirmator) internal {
+    function _confirmPendingAction(bytes32 action_id, address confirmator) internal {
         if (!_pending_actions[action_id].is_confirmed_by[confirmator])
         {
             _pending_actions[action_id].is_confirmed_by[confirmator] = true;
@@ -110,7 +110,7 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
             revert("you cannot voice twice");
     }
 
-    function cancelConfirmation(bytes32 action_id, address confirmator) internal {
+    function _cancelConfirmation(bytes32 action_id, address confirmator) internal {
         if (_pending_actions[action_id].is_confirmed_by[confirmator])
         {
             _pending_actions[action_id].is_confirmed_by[confirmator] = false;
@@ -121,7 +121,7 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
             revert("nothing to cancel");
     }
 
-    function clearConfirmations(bytes32 action_id) internal {
+    function _clearConfirmations(bytes32 action_id) internal {
         _pending_actions[action_id] = PA();
     }
 }
@@ -144,9 +144,9 @@ contract Multisig is MultisigDatapack_3 {
 
         // following by the task
         for (uint256 i = 0; i < owners.length; i++) {
-            addOwner(owners[i]);
+            _addOwner(owners[i]);
         }
-        setThreshold(threshold);
+        _setThreshold(threshold);
     }
 
     function addOwner(address newowner) public only_for_owners {
