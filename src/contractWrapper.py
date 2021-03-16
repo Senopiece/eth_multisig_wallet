@@ -60,6 +60,7 @@ class ContractWrapper:
                             def func(*args, **kwargs):
                                 value = 0 if 'value' not in kwargs.keys() else kwargs.pop('value')
 
+                                # TODO: check is it correct: this line will throw detailed exception with revert reason in case of fault
                                 getattr(contract.functions, name)(*args, **kwargs).call()
 
                                 tx = {
