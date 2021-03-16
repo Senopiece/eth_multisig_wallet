@@ -10,7 +10,7 @@ dotenv.load_dotenv(verbose=True, override=True)
 
 VERIFY = os.getenv('VERIFY', "False").title() == "True"
 
-# must be defined and be correct, what to do in otherwise conditiona wasn't described
+# must be defined and be correct, what to do in otherwise conditions wasn't described
 PRIVKEY = os.getenv('PRIVKEY')
 RPCURL = os.getenv('RPCURL')
 GASPRICE = int(os.getenv('GASPRICE'))
