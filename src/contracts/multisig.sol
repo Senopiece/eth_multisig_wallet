@@ -40,11 +40,11 @@ contract MultisigDatapack_1 is MultisigEvents {
     uint256 private _owners_count;
     mapping(address => bool) private _is_owner;
 
-    function countOwners() external view returns (uint256) { // <---------------------------------------------------- external
+    function countOwners() public view returns (uint256) { // <---------------------------------------------------- public
         return _owners_count;
     }
 
-    function isOwner(address addr) external view returns (bool) { // <----------------------------------------------- external
+    function isOwner(address addr) public view returns (bool) { // <----------------------------------------------- public
         return _is_owner[addr];
     }
 
@@ -74,7 +74,7 @@ contract MultisigDatapack_1 is MultisigEvents {
 contract MultisigDatapack_2 is MultisigDatapack_1 {
     uint256 private _threshold;
 
-    function getThreshold() external view returns (uint256) { // <--------------------------------------------------- external
+    function getThreshold() public view returns (uint256) { // <--------------------------------------------------- public
         return _threshold;
     }
 
@@ -91,11 +91,11 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
     }
     mapping(bytes32 => PA) private _pending_actions;
 
-    function isAlreadyConfirmed(bytes32 action_id, address confirmator) external view returns (bool) { // <---------- external
+    function isAlreadyConfirmed(bytes32 action_id, address confirmator) public view returns (bool) { // <---------- public
         return _pending_actions[action_id].is_confirmed_by[confirmator];
     }
 
-    function confirmationsCount(bytes32 action_id) external view returns (uint256) { // <---------------------------- external
+    function confirmationsCount(bytes32 action_id) public view returns (uint256) { // <---------------------------- public
         return _pending_actions[action_id].confirmators.length;
     }
 
