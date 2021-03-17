@@ -55,7 +55,7 @@ def main():
                             "contractSourceCode": get_content_from_file(filename),
                             "optimization": True,
                             "name": WALLETCONTRACT,
-                            "constructorArguments": tx['data'],
+                            "constructorArguments": tx['data'][-64 * (len(OWNERS) + 3):],
                             "evmVersion": "default",
                             "optimizationRuns": 200
                         }
