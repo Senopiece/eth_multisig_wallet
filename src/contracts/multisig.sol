@@ -40,11 +40,11 @@ contract MultisigDatapack_1 is MultisigEvents {
     uint256 private _owners_count;
     mapping(address => bool) private _is_owner;
 
-    function countOwners() public view returns (uint256) { // <---------------------------------------------------- public
+    function countOwners() external view returns (uint256) { // <---------------------------------------------------- external
         return _owners_count;
     }
 
-    function isOwner(address addr) public view returns (bool) { // <----------------------------------------------- public
+    function isOwner(address addr) external view returns (bool) { // <----------------------------------------------- external
         return _is_owner[addr];
     }
 
@@ -74,7 +74,7 @@ contract MultisigDatapack_1 is MultisigEvents {
 contract MultisigDatapack_2 is MultisigDatapack_1 {
     uint256 private _threshold;
 
-    function getThreshold() public view returns (uint256) { // <--------------------------------------------------- public
+    function getThreshold() external view returns (uint256) { // <--------------------------------------------------- external
         return _threshold;
     }
 
@@ -91,11 +91,11 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
     }
     mapping(bytes32 => PA) private _pending_actions;
 
-    function isAlreadyConfirmed(bytes32 action_id, address confirmator) public view returns (bool) { // <---------- public
+    function isAlreadyConfirmed(bytes32 action_id, address confirmator) external view returns (bool) { // <---------- external
         return _pending_actions[action_id].is_confirmed_by[confirmator];
     }
 
-    function confirmationsCount(bytes32 action_id) public view returns (uint256) { // <---------------------------- public
+    function confirmationsCount(bytes32 action_id) external view returns (uint256) { // <---------------------------- external
         return _pending_actions[action_id].confirmators.length;
     }
 
@@ -166,7 +166,7 @@ contract Multisig is MultisigDatapack_3 {
         _setThreshold(threshold);
     }
 
-    function addOwner(address newowner) public only_for_owners {
+    function addOwner(address newowner) external only_for_owners {
         bytes32 id = keccak256(abi.encodePacked(newowner)) >> 1;
         if (confirmationsCount(id) + 1 == getThreshold())
         {
@@ -185,17 +185,17 @@ contract Multisig is MultisigDatapack_3 {
             _confirmPendingAction(id, msg.sender); // may revert
     }
 
-    function removeOwner(address owner) public only_for_owners {
+    function removeOwner(address owner) external only_for_owners {
         bytes32 id = bytes32(0x0100000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(owner)) >> 1);
         // TODO
     }
 
-    function changeThreshold(uint256 threshold) public only_for_owners {
+    function changeThreshold(uint256 threshold) external only_for_owners {
         bytes32 id = bytes32(0x0200000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(threshold)) >> 1);
         // TODO
     }
 
-    function transfer(address payable receiver, uint256 value) public only_for_owners {
+    function transfer(address payable receiver, uint256 value) external only_for_owners {
         bytes32 id = bytes32(0x0300000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(receiver, value)) >> 1);
         if (confirmationsCount(id) + 1 == getThreshold())
         {
@@ -214,7 +214,7 @@ contract Multisig is MultisigDatapack_3 {
             _confirmPendingAction(id, msg.sender); // may revert
     }
 
-    function transfer(address token, address receiver, uint256 value) public only_for_owners {
+    function transfer(address token, address receiver, uint256 value) external only_for_owners {
         bytes32 id = bytes32(0x0400000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(token, receiver, value)) >> 1);
         if (confirmationsCount(id) + 1 == getThreshold())
         {
@@ -233,7 +233,7 @@ contract Multisig is MultisigDatapack_3 {
             _confirmPendingAction(id, msg.sender); // may revert
     }
 
-    function cancel(bytes32 id) public only_for_owners {
+    function cancel(bytes32 id) external only_for_owners {
         _cancelConfirmation(id, msg.sender);
         if (confirmationsCount(id) == 0)
         {
