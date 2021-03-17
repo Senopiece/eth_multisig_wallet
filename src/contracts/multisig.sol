@@ -168,7 +168,21 @@ contract Multisig is MultisigDatapack_3 {
 
     function addOwner(address newowner) public only_for_owners {
         bytes32 id = keccak256(abi.encodePacked(newowner)) >> 1;
-        // TODO
+        if (confirmationsCount(id) + 1 == getThreshold())
+        {
+            _addOwner(newowner); // may revert
+
+            emit OwnerAdded(newowner);
+            emit ActionConfirmed(id, msg.sender);
+            _clearConfirmations(id);
+        }
+        else if (confirmationsCount(id) == 0)
+        {
+            emit RequestToAddOwner(newowner);
+            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
+        }
+        else
+            _confirmPendingAction(id, msg.sender); // may revert
     }
 
     function removeOwner(address owner) public only_for_owners {
