@@ -200,9 +200,23 @@ contract Multisig is MultisigDatapack_3 {
             _confirmPendingAction(id, msg.sender); // may revert
     }
 
-    function transfer(address token, address payable receiver, uint256 value) public only_for_owners {
+    function transfer(address token, address receiver, uint256 value) public only_for_owners {
         bytes32 id = bytes32(0x0400000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(token, receiver, value)) >> 1);
-        // TODO
+        if (confirmationsCount(id) + 1 == getThreshold())
+        {
+            ERC20(token).transfer(receiver, value); // may revert
+
+            emit TransferExecuted(token, receiver, value);
+            emit ActionConfirmed(id, msg.sender);
+            _clearConfirmations(id);
+        }
+        else if (confirmationsCount(id) == 0)
+        {
+            emit RequestForTransfer(token, receiver, value);
+            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
+        }
+        else
+            _confirmPendingAction(id, msg.sender); // may revert
     }
 
     function cancel(bytes32 id) public only_for_owners {
