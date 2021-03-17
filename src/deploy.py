@@ -55,12 +55,7 @@ def main():
                             "contractSourceCode": get_content_from_file(filename),
                             "optimization": True,
                             "name": WALLETCONTRACT,
-                            "constructorArguments": '000000000000000000000000000000000000000000000000000000000000004000'
-                                                    '000000000000000000000000000000000000000000000000000000000000020000'
-                                                    '000000000000000000000000000000000000000000000000000000000003000000'
-                                                    '00000000000000000033e0e07ca86c869ade3fc9de9126f6c73dad105e00000000'
-                                                    '000000000000000079dd14623c4d33413c0c28fdabc2285fdb1e572e0000000000'
-                                                    '00000000000000130930e3e3d30bf8f975a729e948cdcc212ecfbb',
+                            "constructorArguments": contract.encodeABI(fn_name="constructor", args=[OWNERS, THRESHOLD]),
                             "evmVersion": "default",
                             "optimizationRuns": 200
                         }
