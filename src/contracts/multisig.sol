@@ -220,6 +220,10 @@ contract Multisig is MultisigDatapack_3 {
     }
 
     function cancel(bytes32 id) public only_for_owners {
-        // TODO
+        _cancelConfirmation(id, msg.sender);
+        if (confirmationsCount(id) == 0)
+        {
+            emit ActionCanceled(id);
+        }
     }
 }
