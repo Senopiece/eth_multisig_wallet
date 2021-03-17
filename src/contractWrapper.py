@@ -53,9 +53,7 @@ class ContractWrapper:
                                 return getattr(contract.functions, name)(*args, **kwargs).call()
 
                             return func
-                    elif elem['stateMutability'] == 'nonpayable' or \
-                            elem['stateMutability'] == 'pure' or \
-                            elem['stateMutability'] == 'payable':
+                    else:
                         def funct(name):
                             def func(*args, **kwargs):
                                 value = 0 if 'value' not in kwargs.keys() else kwargs.pop('value')
