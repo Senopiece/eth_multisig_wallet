@@ -145,6 +145,8 @@ contract MultisigDatapack_3 is MultisigDatapack_2 {
 
 contract Multisig is MultisigDatapack_3 {
 
+    mapping(bytes32 => bytes32) sig_to_id;
+
     modifier only_for_owners() {
         require(isOwner(msg.sender), "this method is only for owners, you are not an owner");
 
@@ -167,8 +169,23 @@ contract Multisig is MultisigDatapack_3 {
     }
 
     function addOwner(address newowner) external only_for_owners {
-        bytes32 id = keccak256(abi.encodePacked(newowner)) >> 1;
-        if (confirmationsCount(id) + 1 == getThreshold())
+        bytes32 sig = keccak256(abi.encodePacked(newowner));
+        bytes32 id = sig_to_id[sig];
+        if (confirmationsCount(id) == 0)
+        {
+            // also here if id = 0 (first appear of such paramerets) ; implicitly we can assume that confirmationsCount(0) = 0
+
+            id = keccak256(abi.encodePacked(sig, block.number));
+            sig_to_id[sig] = id;
+
+            emit RequestToAddOwner(newowner);
+            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
+        }
+        else if (confirmationsCount(id) + 1 < getThreshold())
+        {
+            _confirmPendingAction(id, msg.sender); // may revert
+        }
+        else
         {
             _addOwner(newowner); // may revert
 
@@ -176,13 +193,6 @@ contract Multisig is MultisigDatapack_3 {
             emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
-        else if (confirmationsCount(id) == 0)
-        {
-            emit RequestToAddOwner(newowner);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
-        }
-        else
-            _confirmPendingAction(id, msg.sender); // may revert
     }
 
     function removeOwner(address owner) external only_for_owners {
@@ -196,8 +206,23 @@ contract Multisig is MultisigDatapack_3 {
     }
 
     function transfer(address payable receiver, uint256 value) external only_for_owners {
-        bytes32 id = bytes32(0x0300000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(receiver, value)) >> 1);
-        if (confirmationsCount(id) + 1 == getThreshold())
+        bytes32 sig = keccak256(abi.encodePacked(receiver, value));
+        bytes32 id = sig_to_id[sig];
+        if (confirmationsCount(id) == 0)
+        {
+            // also here if id = 0 (first appear of such paramerets) ; implicitly we can assume that confirmationsCount(0) = 0
+
+            id = keccak256(abi.encodePacked(sig, block.number));
+            sig_to_id[sig] = id;
+
+            emit RequestForTransfer(address(0x0), receiver, value);
+            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
+        }
+        else if (confirmationsCount(id) + 1 < getThreshold())
+        {
+            _confirmPendingAction(id, msg.sender); // may revert
+        }
+        else
         {
             receiver.transfer(value); // may revert
 
@@ -205,18 +230,26 @@ contract Multisig is MultisigDatapack_3 {
             emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
-        else if (confirmationsCount(id) == 0)
-        {
-            emit RequestForTransfer(address(0x0), receiver, value);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
-        }
-        else
-            _confirmPendingAction(id, msg.sender); // may revert
     }
 
     function transfer(address token, address receiver, uint256 value) external only_for_owners {
-        bytes32 id = bytes32(0x0400000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(token, receiver, value)) >> 1);
-        if (confirmationsCount(id) + 1 == getThreshold())
+        bytes32 sig = keccak256(abi.encodePacked(token, receiver, value));
+        bytes32 id = sig_to_id[sig];
+        if (confirmationsCount(id) == 0)
+        {
+            // also here if id = 0 (first appear of such paramerets) ; implicitly we can assume that confirmationsCount(0) = 0
+
+            id = keccak256(abi.encodePacked(sig, block.number));
+            sig_to_id[sig] = id;
+
+            emit RequestForTransfer(token, receiver, value);
+            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
+        }
+        else if (confirmationsCount(id) + 1 < getThreshold())
+        {
+            _confirmPendingAction(id, msg.sender); // may revert
+        }
+        else
         {
             ERC20(token).transfer(receiver, value); // may revert
 
@@ -224,13 +257,6 @@ contract Multisig is MultisigDatapack_3 {
             emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
-        else if (confirmationsCount(id) == 0)
-        {
-            emit RequestForTransfer(token, receiver, value);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
-        }
-        else
-            _confirmPendingAction(id, msg.sender); // may revert
     }
 
     function cancel(bytes32 id) external only_for_owners {
