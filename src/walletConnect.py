@@ -17,6 +17,11 @@ WALLETCONTRACTADDRESS = os.getenv('WALLETCONTRACTADDRESS')
 web3 = Web3(HTTPProvider(RPCURL))
 
 abi = get_ABI(WALLETCONTRACTADDRESS)
+
+# DEBUG
+from pprint import pprint
+pprint(abi)
+
 contract = ContractWrapper(w3=web3, gas=GASPRICE, user_pk=PRIVKEY, abi=abi, address=WALLETCONTRACTADDRESS)
 
 
