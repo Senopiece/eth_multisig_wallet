@@ -1,5 +1,5 @@
 import os
-
+import json
 import requests
 import solcx
 from eth_account import Account
@@ -19,11 +19,11 @@ def get_ABI(addr, local_path=None):
     data = resp.json()
     abi = data["result"]
     if resp.status_code != 200 or data["message"] != "OK":
-        local_path = "contracts/test.sol" if 'src' in os.getcwd() else "src/contracts/test.sol"
+        local_path = "contracts/multisig.sol" if 'src' in os.getcwd() else "src/contracts/test.sol"
         solcx.install_solc(SOLIDITY)
         intermediates = solcx.compile_files([local_path])
         abi = intermediates[next(filter(lambda x: 'ERC20' not in x, intermediates.keys()))]["abi"]
-    return abi
+    return json.loads(abi)
 
 
 def keccak_shifted(txt):

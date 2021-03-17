@@ -15,12 +15,9 @@ GASPRICE = int(os.getenv('GASPRICE'))
 WALLETCONTRACTADDRESS = os.getenv('WALLETCONTRACTADDRESS')
 
 web3 = Web3(HTTPProvider(RPCURL))
+web3.eth.handleRevert = True
 
 abi = get_ABI(WALLETCONTRACTADDRESS)
-
-# DEBUG
-from pprint import pprint
-pprint(abi)
 
 contract = ContractWrapper(w3=web3, gas=GASPRICE, user_pk=PRIVKEY, abi=abi, address=WALLETCONTRACTADDRESS)
 
@@ -76,9 +73,9 @@ def remove(addr):
     def post(tx, is_end):
         pass
 
-    tx = execute(lambda: contract.addOwner(addr),
-                 contract.events.RequestToAddOwner(),
-                 contract.events.OwnerAdded(),
+    tx = execute(lambda: contract.removeOwner(addr),
+                 contract.events.RequestToRemoveOwner(),
+                 contract.events.OwnerRemoved(),
                  post,
                  keccak_shifted(addr))
 
@@ -128,13 +125,25 @@ def get(mode):
         pass
 
 
+def transfer(to, value):
+    def post(tx, is_finished_ok):
+        pass
+
+    tx = execute(lambda: contract.transfer(to, int(value)),
+                 contract.events.RequestForTransfer(),
+                 contract.events.ActionConfirmed(),
+                 post,
+                 None)
+
+
 def main():
     if len(sys.argv) > 2:
         cmd = sys.argv[1]
         cmds = {
             "add": add,
             "remove": remove,
-            "get": get
+            "get": get,
+            "transfer": transfer
         }
         cmds[cmd](*sys.argv[2:])
 
