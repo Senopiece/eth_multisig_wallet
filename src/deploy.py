@@ -55,7 +55,7 @@ def main():
                             "contractSourceCode": get_content_from_file(filename),
                             "optimization": True,
                             "name": WALLETCONTRACT,
-                            "constructorArguments": contract.encodeABI(fn_name="constructor", args=[OWNERS, THRESHOLD]),
+                            "constructorArguments": tx['data'],
                             "evmVersion": "default",
                             "optimizationRuns": 200
                         }
