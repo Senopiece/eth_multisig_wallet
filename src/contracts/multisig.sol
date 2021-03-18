@@ -181,16 +181,13 @@ contract Multisig is MultisigDatapack_3 {
             emit RequestToAddOwner(newowner);
         }
 
-        if (confirmationsCount(id) + 1 < getThreshold())
-        {
-            _confirmPendingAction(id, msg.sender); // may revert
-        }
-        else
+        _confirmPendingAction(id, msg.sender); // may revert
+
+        if (confirmationsCount(id) == getThreshold())
         {
             _addOwner(newowner); // may revert
 
             emit OwnerAdded(newowner);
-            emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
     }
@@ -208,11 +205,9 @@ contract Multisig is MultisigDatapack_3 {
             emit RequestToRemoveOwner(owner);
         }
 
-        if (confirmationsCount(id) + 1 < getThreshold())
-        {
-            _confirmPendingAction(id, msg.sender); // may revert
-        }
-        else
+        _confirmPendingAction(id, msg.sender); // may revert
+
+        if (confirmationsCount(id) == getThreshold())
         {
             require(countOwners() >= 2, "owners amount should not be less than 1");
             require(getThreshold() <= countOwners() - 1, "threshold should be less or equal to owners amount");
@@ -220,7 +215,6 @@ contract Multisig is MultisigDatapack_3 {
             _removeOwner(owner); // may revert
 
             emit OwnerRemoved(owner);
-            emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
     }
@@ -238,11 +232,9 @@ contract Multisig is MultisigDatapack_3 {
             emit RequestToChangeThreshold(countOwners(), getThreshold(), threshold);
         }
 
-        if (confirmationsCount(id) + 1 < getThreshold())
-        {
-            _confirmPendingAction(id, msg.sender); // may revert
-        }
-        else
+        _confirmPendingAction(id, msg.sender); // may revert
+
+        if (confirmationsCount(id) == getThreshold())
         {
             require(threshold <= countOwners(), "threshold should be less or equal to owners amount");
 
@@ -250,7 +242,6 @@ contract Multisig is MultisigDatapack_3 {
             _setThreshold(threshold);
 
             emit ThresholdChanged(countOwners(), oldth, threshold);
-            emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
     }
@@ -268,16 +259,13 @@ contract Multisig is MultisigDatapack_3 {
             emit RequestForTransfer(address(0x0), receiver, value);
         }
 
-        if (confirmationsCount(id) + 1 < getThreshold())
-        {
-            _confirmPendingAction(id, msg.sender); // may revert
-        }
-        else
+        _confirmPendingAction(id, msg.sender); // may revert
+
+        if (confirmationsCount(id) == getThreshold())
         {
             receiver.transfer(value); // may revert
 
             emit TransferExecuted(address(0x0), receiver, value);
-            emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
     }
@@ -295,16 +283,13 @@ contract Multisig is MultisigDatapack_3 {
             emit RequestForTransfer(token, receiver, value);
         }
 
-        if (confirmationsCount(id) + 1 < getThreshold())
-        {
-            _confirmPendingAction(id, msg.sender); // may revert
-        }
-        else
+        _confirmPendingAction(id, msg.sender); // may revert
+
+        if (confirmationsCount(id) == getThreshold())
         {
             ERC20(token).transfer(receiver, value); // may revert
 
             emit TransferExecuted(token, receiver, value);
-            emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
     }
