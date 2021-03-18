@@ -266,4 +266,6 @@ contract Multisig is MultisigDatapack_3 {
             emit ActionCanceled(id);
         }
     }
+
+    fallback() external payable {} // make him availeble to recieve ethers
 }
