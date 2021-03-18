@@ -225,7 +225,8 @@ contract Multisig is MultisigDatapack_3 {
     }
 
     function changeThreshold(uint256 threshold) external only_for_owners {
-        bytes32 id = bytes32(0x0200000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(threshold)) >> 1);
+        bytes32 sig = keccak256(abi.encodePacked(threshold));
+        bytes32 id = sig_to_id[sig];
         // TODO
     }
 
@@ -291,5 +292,6 @@ contract Multisig is MultisigDatapack_3 {
         }
     }
 
-    fallback() external payable {} // make him availeble to recieve ethers
+    // make him availeble to recieve ethers
+    recieve() external payable {}
 }
