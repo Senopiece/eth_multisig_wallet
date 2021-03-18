@@ -48,6 +48,9 @@ def main():
                     txr = web3.eth.waitForTransactionReceipt(tx_hash)
                     contract_addr = txr['contractAddress']
 
+                    if os.getenv('DEV'):
+                        dotenv.set_key(dotenv.find_dotenv(), "WALLETCONTRACTADDRESS", contract_addr)
+
                     if VERIFY:
                         json = {
                             "addressHash": contract_addr,
@@ -66,9 +69,6 @@ def main():
                                 f'error while sending on verification - {response.status_code} {response.reason}.')
                         if response.json()['message'] != 'OK':
                             raise Exception(f'verification failed - {response.json()["message"]}')
-
-                    if os.getenv('DEV'):
-                        dotenv.set_key(dotenv.find_dotenv(), "WALLETCONTRACTADDRESS", contract_addr)
 
                     print("Deployed at " + contract_addr)
                     return

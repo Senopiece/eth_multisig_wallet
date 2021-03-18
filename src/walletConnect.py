@@ -83,7 +83,7 @@ def remove(addr):
 def execute(tx_cmd, req_evt, end_evt, post_check, fallback_id):
     tx = tx_cmd()
 
-    if contract.isOwner(contract.user_acc):
+    if not contract.isOwner(contract.user_acc):
         print("It is not the wallet owner. Nothing to do.")
         return tx
 
@@ -102,8 +102,7 @@ def execute(tx_cmd, req_evt, end_evt, post_check, fallback_id):
     confirms = len(contract.events.ActionConfirmed.createFilter(fromBlock="0x0",
                                                                 argument_filters={"id": owner_id}).get_all_entries())
 
-    th = contract.getThreshold()
-    print(f"It is {min(1, confirms)} of {th} confirmations", end='')
+    print(f"It is {min(1, confirms)} of {contract.getThreshold()} confirmations", end='')
 
     is_added = len(end_evt.processReceipt(tx))
     if is_added:
@@ -138,14 +137,14 @@ def get(mode):
 
 
 def transfer(to, value):
-    def post(tx, is_finished_ok):
-        pass
-
-    tx = execute(lambda: contract.transfer(to, int(value)),
-                 contract.events.RequestForTransfer(),
-                 contract.events.ActionConfirmed(),
-                 post,
-                 None)
+    print(contract.user_acc)
+    web3.eth.default_account = contract.user_acc
+    if not contract.isOwner(contract.user_acc):
+        print("It is not the wallet owner. Nothing to do.")
+    else:
+        print('nice work')
+    
+    contract.transfer(to, int(value))
 
 
 def main():
