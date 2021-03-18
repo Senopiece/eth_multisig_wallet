@@ -83,9 +83,9 @@ def remove(addr):
 def execute(tx_cmd, req_evt, end_evt, post_check, fallback_id):
     tx = tx_cmd()
 
-    # if web3.eth.defaultAccount not in contract.getOwners():
-    #     print("It is not the wallet owner. Nothing to do.")
-    #     return tx
+    if contract.isOwner(contract.user_acc):
+        print("It is not the wallet owner. Nothing to do.")
+        return tx
 
     e_ok = contract.events.ActionConfirmed().processReceipt(tx)
 
@@ -116,7 +116,19 @@ def execute(tx_cmd, req_evt, end_evt, post_check, fallback_id):
 def get(mode):
     if mode == 'owners':
         print("The current owners list:")
-        print(*contract.getOwners(), sep='\n')
+
+        owners = set()
+        add_filter = contract.events.OwnerAdded.createFilter(fromBlock='earliest', toBlock='latest')
+        rmv_filter = contract.events.OwnerRemoved.createFilter(fromBlock='earliest', toBlock='latest')
+
+        for event in add_filter.get_all_entries():
+            owners.add(event['args']['newowner'])
+
+        for event in rmv_filter.get_all_entries():
+            owners.remove(event['args']['owner'])
+
+        print(*owners, sep='\n')
+    
     elif mode == 'thresh':
         print(f"Required number of confirmations: {contract.getThreshold()}")
     elif mode == '':
