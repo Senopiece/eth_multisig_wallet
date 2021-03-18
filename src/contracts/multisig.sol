@@ -196,8 +196,32 @@ contract Multisig is MultisigDatapack_3 {
     }
 
     function removeOwner(address owner) external only_for_owners {
-        bytes32 id = bytes32(0x0100000000000000000000000000000000000000000000000000000000000000) | (keccak256(abi.encodePacked(owner)) >> 1);
-        // TODO
+        bytes32 sig = keccak256(abi.encodePacked(owner));
+        bytes32 id = sig_to_id[sig];
+        if (confirmationsCount(id) == 0)
+        {
+            // also here if id = 0 (first appear of such paramerets) ; implicitly we can assume that confirmationsCount(0) = 0
+
+            id = keccak256(abi.encodePacked(sig, block.number));
+            sig_to_id[sig] = id;
+
+            emit RequestToRemoveOwner(owner);
+            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
+        }
+        else if (confirmationsCount(id) + 1 < getThreshold())
+        {
+            _confirmPendingAction(id, msg.sender); // may revert
+        }
+        else
+        {
+            require(getThreshold() <= countOwners() - 1, "threshold should be less or equal to owners amount");
+
+            _removeOwner(owner); // may revert
+
+            emit OwnerRemoved(owner);
+            emit ActionConfirmed(id, msg.sender);
+            _clearConfirmations(id);
+        }
     }
 
     function changeThreshold(uint256 threshold) external only_for_owners {
