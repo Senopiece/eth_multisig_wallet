@@ -235,7 +235,7 @@ contract Multisig is MultisigDatapack_3 {
             id = keccak256(abi.encodePacked(sig, block.number));
             sig_to_id[sig] = id;
 
-            emit RequestToChangeThreshold(getOwners(), getThreshold(), threshold);
+            emit RequestToChangeThreshold(countOwners(), getThreshold(), threshold);
         }
 
         if (confirmationsCount(id) + 1 < getThreshold())
@@ -246,10 +246,10 @@ contract Multisig is MultisigDatapack_3 {
         {
             require(threshold <= countOwners(), "threshold should be less or equal to owners amount");
 
-            bytes256 oldth = getThreshold();
+            uint256 oldth = getThreshold();
             _setThreshold(threshold);
 
-            emit ThresholdChanged(getOwners(), oldth, threshold);
+            emit ThresholdChanged(countOwners(), oldth, threshold);
             emit ActionConfirmed(id, msg.sender);
             _clearConfirmations(id);
         }
@@ -318,5 +318,5 @@ contract Multisig is MultisigDatapack_3 {
     }
 
     // make him availeble to recieve ethers
-    recieve() external payable {}
+    fallback() external payable {}
 }
