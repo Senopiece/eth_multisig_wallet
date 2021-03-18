@@ -5,6 +5,7 @@ import solcx
 import sys
 import os
 import requests
+from requests.exceptions import ConnectionError
 
 dotenv.load_dotenv(verbose=True, override=True)
 
@@ -31,19 +32,19 @@ def main():
                 filename + ":" + WALLETCONTRACT)
 
             if intermediates is not None:
-                web3 = Web3(HTTPProvider(RPCURL))
-
-                abi = intermediates["abi"]
-                code = intermediates["bin"]
-
-                tx = web3.eth.contract(bytecode=code, abi=abi).constructor(OWNERS, THRESHOLD).buildTransaction({
-                    'gasPrice': GASPRICE if GASPRICE is not None else web3.eth.gasPrice,
-                    'nonce': web3.eth.getTransactionCount(to_address(PRIVKEY))
-                })
-
-                signed = web3.eth.account.signTransaction(tx, private_key=PRIVKEY)
-
                 try:
+                    web3 = Web3(HTTPProvider(RPCURL))
+
+                    abi = intermediates["abi"]
+                    code = intermediates["bin"]
+
+                    tx = web3.eth.contract(bytecode=code, abi=abi).constructor(OWNERS, THRESHOLD).buildTransaction({
+                        'gasPrice': GASPRICE if GASPRICE is not None else web3.eth.gasPrice,
+                        'nonce': web3.eth.getTransactionCount(to_address(PRIVKEY))
+                    })
+
+                    signed = web3.eth.account.signTransaction(tx, private_key=PRIVKEY)
+
                     tx_hash = web3.eth.sendRawTransaction(signed.rawTransaction)
                     txr = web3.eth.waitForTransactionReceipt(tx_hash)
                     contract_addr = txr['contractAddress']
@@ -73,11 +74,13 @@ def main():
                     print("Deployed at " + contract_addr)
                     return
 
+                except ConnectionError as ex:
+                    problem = "The JSON RPC URL " + RPCURL + " is not accessible"
                 except Exception as ex:
                     if str(ex).find('Insufficient funds') != -1:
                         problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."
                     else:
-                        problem = "The JSON RPC URL " + RPCURL + " is not accessible"
+                        raise ex
             else:
                 problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
         else:
