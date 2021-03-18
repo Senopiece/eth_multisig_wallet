@@ -77,8 +77,7 @@ def main():
                     if str(ex).find('Insufficient funds') != -1:
                         problem = "The balance of the account " + to_address(PRIVKEY) + " is not enough to deploy."
                     else:
-                        raise ex
-                        # problem = "The JSON RPC URL " + RPCURL + " is not accessible"
+                        problem = "The JSON RPC URL " + RPCURL + " is not accessible"
             else:
                 problem = "There is no contract `" + WALLETCONTRACT + "` in " + filename
         else:
