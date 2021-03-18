@@ -179,9 +179,9 @@ contract Multisig is MultisigDatapack_3 {
             sig_to_id[sig] = id;
 
             emit RequestToAddOwner(newowner);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
         }
-        else if (confirmationsCount(id) + 1 < getThreshold())
+
+        if (confirmationsCount(id) + 1 < getThreshold())
         {
             _confirmPendingAction(id, msg.sender); // may revert
         }
@@ -206,9 +206,9 @@ contract Multisig is MultisigDatapack_3 {
             sig_to_id[sig] = id;
 
             emit RequestToRemoveOwner(owner);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
         }
-        else if (confirmationsCount(id) + 1 < getThreshold())
+
+        if (confirmationsCount(id) + 1 < getThreshold())
         {
             _confirmPendingAction(id, msg.sender); // may revert
         }
@@ -228,7 +228,31 @@ contract Multisig is MultisigDatapack_3 {
     function changeThreshold(uint256 threshold) external only_for_owners {
         bytes32 sig = keccak256(abi.encodePacked(threshold));
         bytes32 id = sig_to_id[sig];
-        // TODO
+        if (confirmationsCount(id) == 0)
+        {
+            // also here if id = 0 (first appear of such paramerets) ; implicitly we can assume that confirmationsCount(0) = 0
+
+            id = keccak256(abi.encodePacked(sig, block.number));
+            sig_to_id[sig] = id;
+
+            emit RequestToChangeThreshold(getOwners(), getThreshold(), threshold);
+        }
+
+        if (confirmationsCount(id) + 1 < getThreshold())
+        {
+            _confirmPendingAction(id, msg.sender); // may revert
+        }
+        else
+        {
+            require(threshold <= countOwners(), "threshold should be less or equal to owners amount");
+
+            bytes256 oldth = getThreshold();
+            _setThreshold(threshold);
+
+            emit ThresholdChanged(getOwners(), oldth, threshold);
+            emit ActionConfirmed(id, msg.sender);
+            _clearConfirmations(id);
+        }
     }
 
     function transfer(address payable receiver, uint256 value) external only_for_owners {
@@ -242,9 +266,9 @@ contract Multisig is MultisigDatapack_3 {
             sig_to_id[sig] = id;
 
             emit RequestForTransfer(address(0x0), receiver, value);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
         }
-        else if (confirmationsCount(id) + 1 < getThreshold())
+
+        if (confirmationsCount(id) + 1 < getThreshold())
         {
             _confirmPendingAction(id, msg.sender); // may revert
         }
@@ -269,9 +293,9 @@ contract Multisig is MultisigDatapack_3 {
             sig_to_id[sig] = id;
 
             emit RequestForTransfer(token, receiver, value);
-            _confirmPendingAction(id, msg.sender); // cannot revert because this address cannot already be a confirmator
         }
-        else if (confirmationsCount(id) + 1 < getThreshold())
+
+        if (confirmationsCount(id) + 1 < getThreshold())
         {
             _confirmPendingAction(id, msg.sender); // may revert
         }
