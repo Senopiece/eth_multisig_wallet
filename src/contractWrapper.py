@@ -18,9 +18,9 @@ class ContractWrapper:
             **kwargs (type): парамтры как для eth.contract().
         """
 
-        gas_price = gas
-        user_priv_key = user_pk
-        user_acc = to_address(user_pk)
+        self.gas_price = gas
+        self.user_priv_key = user_pk
+        self.user_acc = to_address(user_pk)
 
         contract = w3.eth.contract(**kwargs)
 
@@ -30,11 +30,11 @@ class ContractWrapper:
         # setup constructor
         def construct(*args, **kwargs):
             tx = contract.constructor(*args, **kwargs).buildTransaction({
-                'gasPrice': gas_price,
-                'nonce': w3.eth.getTransactionCount(user_acc)
+                'gasPrice': self.gas_price,
+                'nonce': w3.eth.getTransactionCount(self.user_acc)
             })
 
-            signed = w3.eth.account.signTransaction(tx, private_key=user_priv_key)
+            signed = w3.eth.account.signTransaction(tx, private_key=self.user_priv_key)
             tx_hash = w3.eth.sendRawTransaction(signed.rawTransaction)
 
             tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
@@ -58,30 +58,24 @@ class ContractWrapper:
                             def func(*args, **kwargs):
                                 value = 0 if 'value' not in kwargs.keys() else kwargs.pop('value')
 
-                                # TODO: check is it correct: this line will throw detailed exception with revert reason in case of fault
-                                # TODO: describe here how to extract revert reason from such exception
+                                # this line will throw detailed exception with revert reason in case of fault (an instance of ContractLogicError)
                                 getattr(contract.functions, name)(*args, **kwargs).call()
 
                                 tx = {
                                     'to': contract.address,
                                     'value': value,
                                     'gas': 1000000,
-                                    'gasPrice': gas_price,
-                                    'nonce': w3.eth.getTransactionCount(user_acc),
+                                    'gasPrice': self.gas_price,
+                                    'nonce': w3.eth.getTransactionCount(self.user_acc),
                                     'data': contract.encodeABI(fn_name=name, args=args, kwargs=kwargs)
                                 }
 
-                                try:
-                                    signed = w3.eth.account.signTransaction(tx, private_key=user_priv_key)
-                                    tx_hash = w3.eth.sendRawTransaction(signed.rawTransaction)
-                                    tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-                                    return tx_receipt
-                                except Exception as q:
-                                    print(q)
+                                signed = w3.eth.account.signTransaction(tx, private_key=self.user_priv_key)
+                                tx_hash = w3.eth.sendRawTransaction(signed.rawTransaction)
+                                tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
+                                return tx_receipt
+
                             return func
                     setattr(self, elem['name'], funct(elem['name']))
                 except KeyError:
-                    pass
-                except ContractLogicError as ex:
-                    print(ex)
                     pass
