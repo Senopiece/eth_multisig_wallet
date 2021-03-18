@@ -7,6 +7,8 @@ from web3 import Web3, HTTPProvider
 from contractWrapper import ContractWrapper
 from tools import get_ABI, to_address, keccak_shifted
 
+from web3.exceptions import ContractLogicError
+
 load_dotenv(verbose=True, override=True)
 
 PRIVKEY = os.getenv('PRIVKEY')
@@ -137,15 +139,23 @@ def get(mode):
 
 
 def transfer(to, value):
-    print(contract.user_acc)
-    web3.eth.default_account = contract.user_acc
-    if not contract.isOwner(contract.user_acc):
-        print("It is not the wallet owner. Nothing to do.")
+    try:
+        print(contract.isOwner(contract.user_acc))
+        txr, _ = contract.transfer(to, int(value))
+    except ContractLogicError as e:
+        e = str(e)
+        if e == "execution reverted: this method is only for owners, you are not an owner":
+            print("It is not the wallet owner. Nothing to do.")
     else:
-        print('nice work')
-    
-    contract.transfer(to, int(value))
+        aid = contract.events.ActionConfirmed().processReceipt(txr)[0]['id']
+        cc = contract.confirmationsCount(aid)
+        thr = contract.getThreshold()
 
+        if cc == 1:
+            print("Confirmation " + aid)
+        
+        print("Sent at " + txr['transactionHash'])
+        print(f"It is {cc} of {thr} confirmations" + (" -- executed." if cc >= thr else ""))
 
 def main():
     if len(sys.argv) > 2:

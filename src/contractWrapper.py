@@ -59,7 +59,7 @@ class ContractWrapper:
                                 value = 0 if 'value' not in kwargs.keys() else kwargs.pop('value')
 
                                 # this line will throw detailed exception with revert reason in case of fault (an instance of ContractLogicError)
-                                getattr(contract.functions, name)(*args, **kwargs).call()
+                                results = getattr(contract.functions, name)(*args, **kwargs).call()
 
                                 tx = {
                                     'to': contract.address,
@@ -73,7 +73,7 @@ class ContractWrapper:
                                 signed = w3.eth.account.signTransaction(tx, private_key=self.user_priv_key)
                                 tx_hash = w3.eth.sendRawTransaction(signed.rawTransaction)
                                 tx_receipt = w3.eth.waitForTransactionReceipt(tx_hash)
-                                return tx_receipt
+                                return tx_receipt, results
 
                             return func
                     setattr(self, elem['name'], funct(elem['name']))

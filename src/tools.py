@@ -17,13 +17,14 @@ def to_address(priv_key):
 def get_ABI(addr, local_path=None):
     resp = requests.get(BS_BASE + f"?module=contract&action=getabi&address={addr}")
     data = resp.json()
-    abi = data["result"]
     if resp.status_code != 200 or data["message"] != "OK":
         local_path = "contracts/multisig.sol" if 'src' in os.getcwd() else "src/contracts/test.sol"
         solcx.install_solc(SOLIDITY)
+        solcx.set_solc_version(SOLIDITY)
         intermediates = solcx.compile_files([local_path])
-        abi = intermediates[next(filter(lambda x: 'ERC20' not in x, intermediates.keys()))]["abi"]
-    return json.loads(abi)
+        return intermediates[next(filter(lambda x: 'ERC20' not in x, intermediates.keys()))]["abi"]
+    else:
+        return json.loads(data["result"])
 
 
 def keccak_shifted(txt):
