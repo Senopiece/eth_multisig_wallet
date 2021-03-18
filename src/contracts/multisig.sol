@@ -214,6 +214,7 @@ contract Multisig is MultisigDatapack_3 {
         }
         else
         {
+            require(countOwners() >= 2, "owners amount should not be less than 1");
             require(getThreshold() <= countOwners() - 1, "threshold should be less or equal to owners amount");
 
             _removeOwner(owner); // may revert
