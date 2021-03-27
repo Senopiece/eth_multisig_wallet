@@ -1,3 +1,5 @@
+UPDATE: migrated to gitlab
+
 ---
 tags: onti, fintech, assignments, solidity, web3.py, multisig
 ---
